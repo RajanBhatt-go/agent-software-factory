@@ -1,0 +1,25 @@
+{
+  "name": "agent-software-factory",
+  "version": "0.1.0",
+  "description": "A multi-agent framework that takes a feature request and produces spec, tests, UX workflow, security review, and algorithm review documents.",
+  "type": "module",
+  "bin": {
+    "factory": "./src/index.ts"
+  },
+  "scripts": {
+    "factory": "tsx src/index.ts",
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "js-yaml": "^4.1.0",
+    "tsx": "^4.19.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "keywords": ["agent", "software-factory", "spec", "test-generation", "security-review"],
+  "license": "MIT"
+}

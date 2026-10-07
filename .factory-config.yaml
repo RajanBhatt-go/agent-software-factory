@@ -1,0 +1,41 @@
+# ─────────────────────────────────────────────────────────────
+#  Agent Software Factory — Project Configuration
+#  Copy this to your project root and customize.
+# ─────────────────────────────────────────────────────────────
+
+project:
+  name: "My Project"
+  description: "What does this project do?"
+  url: "https://example.com"
+
+tech_stack:
+  language: "TypeScript"
+  frontend: "Next.js 14 + Tailwind CSS"
+  backend: "Next.js API routes"
+  database: "PostgreSQL + Prisma"
+  testing: "vitest + Playwright"
+  auth: "next-auth"
+  hosting: "Vercel"
+  ci: "GitHub Actions"
+
+# Project-specific conventions that the factory should follow
+conventions:
+  - "React Server Components over Client Components"
+  - "Zod for API input validation"
+  - "Repository pattern for database access"
+
+# Security configuration
+security:
+  compliance:
+    - "GDPR"
+    - "OWASP ASVS Level 2"
+  review_depth: "stride"    # checklist | stride | full
+
+# Algorithm review configuration
+algorithm:
+  review_depth: "deep"      # basic | deep
+
+# Override which model is used for each stage
+# model_overrides:
+#   security: "claude-opus-5.5"
+#   algorithm: "claude-opus-5.5"
