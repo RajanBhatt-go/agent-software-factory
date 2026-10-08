@@ -1222,6 +1222,7 @@ class APIRoute(routing.Route):
         generate_unique_id_function: Callable[["APIRoute"], str]
         | DefaultPlaceholder = Default(generate_unique_id),
         strict_content_type: bool | DefaultPlaceholder = Default(True),
+        max_body_size: int | None = None,
     ) -> None:
         _populate_api_route_state(
             cast(_APIRouteLike, self),
@@ -1254,6 +1255,12 @@ class APIRoute(routing.Route):
             strict_content_type=strict_content_type,
         )
         self.app = request_response(self.get_route_handler())
+        if max_body_size is not None:
+            from starlette.middleware.body_limit import RequestBodyLimitMiddleware
+
+            self.app = RequestBodyLimitMiddleware(
+                self.app, max_body_size=max_body_size
+            )
 
     def get_route_handler(self) -> Callable[[Request], Coroutine[Any, Any, Response]]:
         route = cast(_APIRouteLike, self)
@@ -2563,6 +2570,19 @@ class APIRouter(routing.Router):
                 """
             ),
         ] = Default(True),
+        max_body_size: Annotated[
+            int | None,
+            Doc(
+                """
+                Maximum total size in bytes of an HTTP request body. Defaults to
+                `None` for no limit. When set, `RequestBodyLimitMiddleware` is
+                applied to each route and to the router's middleware stack.
+
+                Read more about it in the
+                [Starlette docs for Applications](https://starlette.dev/applications/).
+                """
+            ),
+        ] = None,
     ) -> None:
         # Determine the lifespan context to use
         if lifespan is None:
@@ -2581,6 +2601,7 @@ class APIRouter(routing.Router):
             redirect_slashes=redirect_slashes,
             default=default,
             lifespan=lifespan_context,
+            max_body_size=max_body_size,
         )
         if prefix:
             assert prefix.startswith("/"), "A path prefix must start with '/'"
@@ -2599,6 +2620,7 @@ class APIRouter(routing.Router):
         )
 
         self.prefix = prefix
+        self.max_body_size = max_body_size
         self.tags: list[str | Enum] = tags or []
         self.dependencies = list(dependencies or [])
         self.deprecated = deprecated
@@ -3046,6 +3068,7 @@ class APIRouter(routing.Router):
             strict_content_type=get_value_or_default(
                 strict_content_type, self.strict_content_type
             ),
+            max_body_size=self.max_body_size,
         )
         self.routes.append(route)
         self._mark_routes_changed()

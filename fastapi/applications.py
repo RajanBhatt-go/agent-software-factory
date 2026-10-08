@@ -879,6 +879,19 @@ class FastAPI(Starlette):
                 """
             ),
         ] = True,
+        max_body_size: Annotated[
+            int | None,
+            Doc(
+                """
+                Maximum total size in bytes of an HTTP request body. Defaults to
+                `None` for no limit. When set, `RequestBodyLimitMiddleware` is
+                installed at the application level, and also applied to each route.
+
+                Read more about it in the
+                [Starlette docs for Applications](https://starlette.dev/applications/).
+                """
+            ),
+        ] = None,
         **extra: Annotated[
             Any,
             Doc(
@@ -909,6 +922,7 @@ class FastAPI(Starlette):
         self.separate_input_output_schemas = separate_input_output_schemas
         self.openapi_external_docs = openapi_external_docs
         self.extra = extra
+        self.max_body_size = max_body_size
         self.openapi_version: Annotated[
             str,
             Doc(
@@ -1015,6 +1029,7 @@ class FastAPI(Starlette):
             responses=responses,
             generate_unique_id_function=generate_unique_id_function,
             strict_content_type=strict_content_type,
+            max_body_size=max_body_size,
         )
         self.exception_handlers: dict[
             Any, Callable[[Request, Any], Response | Awaitable[Response]]
@@ -1064,11 +1079,23 @@ class FastAPI(Starlette):
             else:
                 exception_handlers[key] = value
 
+        middleware_middleware: list[Middleware] = []
+        if self.max_body_size is not None:
+            from starlette.middleware.body_limit import RequestBodyLimitMiddleware
+
+            middleware_middleware.append(
+                Middleware(
+                    RequestBodyLimitMiddleware,
+                    max_body_size=self.max_body_size,
+                )
+            )
+
         middleware = (
             [
                 Middleware(ServerErrorMiddleware, handler=error_handler, debug=debug),
                 Middleware(ExceptionTelemetryMiddleware),
             ]
+            + middleware_middleware
             + self.user_middleware
             + [
                 Middleware(
